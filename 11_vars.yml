@@ -1,0 +1,14 @@
+hadoop_path: "hadoop_files/hadoop-1.2.1-1.x86_64.rpm"
+jdk_path: "hadoop_files/jdk-8u171-linux-x64.rpm"
+
+hadoop_soft: "hadoop-1.2.1-1.x86_64.rpm"
+
+jdk_soft: "jdk-8u171-linux-x64.rpm"
+
+namenode_core: "hadoop_files/name_core"
+
+namenode_hdfs: "hadoop_files/name_hdfs"
+
+datanode_core: "hadoop_files/data_core"
+
+datanode_hdfs: "hadoop_files/data_hdfs"
