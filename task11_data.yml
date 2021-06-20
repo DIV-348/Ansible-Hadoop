@@ -1,0 +1,85 @@
+- hosts: datanode
+  vars_prompt:
+          - name: "datafold"
+            prompt: "Enter the name of directory for datanode"
+
+
+  vars_files:
+         - 11_vars.yml
+
+  tasks:
+
+         - name: "copying hadoop file"
+           copy:
+                 src: "{{ hadoop_path }}"
+                 dest: /root/
+
+         - name: "copying jdk file"
+           copy:
+                  src: "{{ jdk_path }}"
+                  dest: /root/
+
+         - name: "checking java version "
+           command: "java -version"
+           register: java
+           ignore_errors: yes
+
+         - name: "installing jdk"
+           command: "rpm -ivh {{ jdk_soft }}"
+           when: java.failed == true
+
+         - name: "Checking hadoop version"
+           command: "hadoop version"
+           register: hadoop_version
+           ignore_errors: yes
+
+         - name: "installing hadoop"
+           command: "rpm -ivh {{ hadoop_soft }} --force"
+           register: hadoop_install
+           when: hadoop_version.failed == true
+
+         - name: "creating diectory"
+           file:
+                path: "{{ datafold }}"
+                state: directory
+
+         - name: "uploading core file"
+           template:
+                src: "/ansible/TASK11/hadoop_files/data_core"
+                dest: "/etc/hadoop/core-site.xml"
+
+         - name: "uploading hdfs file"
+           template:
+                  src: "/ansible/TASK11/hadoop_files/data_hdfs"
+                  dest: "/etc/hadoop/hdfs-site.xml"
+
+                  #         - name: "running dfsadmin command"
+                  #           command: "hadoop dfsadmin -report"
+                  #           register: dfsadmin
+           #           ignore_errors: yes
+
+         - name: "stopping firewall"
+           service:
+                name: "firewalld"
+                state: stopped
+
+                
+         - name: "Stopping datanode"
+           shell: "hadoop-daemon.sh stop datanode"
+
+         - name: "Starting datanode"
+           shell: "hadoop-daemon.sh start datanode"
+           # when: dfsadmin.failed == true
+
+         - name: "java process running:"
+           shell: "jps"
+           register: jps
+
+         - name: "process running:"
+           debug:
+               var: jps.stdout
+
+         - name: "running dfsadmin command"
+           command: "hadoop dfsadmin -report"
+           register: dfsadmin
+

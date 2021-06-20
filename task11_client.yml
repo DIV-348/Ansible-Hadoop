@@ -1,0 +1,62 @@
+- hosts: Clientnode
+  vars_prompt:
+          - name: "file"
+            prompt: "Enter the name of file to upload"
+
+
+  vars_files:
+         - 11_vars.yml
+
+  tasks:
+
+         - name: "copying hadoop file"
+           copy:
+                 src: "{{ hadoop_path }}"
+                 dest: /root/
+
+         - name: "copying jdk file"
+           copy:
+                  src: "{{ jdk_path }}"
+                  dest: /root/
+
+         - name: "checking java version "
+           command: "java -version"
+           register: java
+           ignore_errors: yes
+
+         - name: "installing jdk"
+           command: "rpm -ivh {{ jdk_soft }}"
+           when: java.failed == true
+
+         - name: "Checking hadoop version"
+           command: "hadoop version"
+           register: hadoop_version
+           ignore_errors: yes
+
+         - name: "installing hadoop"
+           command: "rpm -ivh {{ hadoop_soft }} --force"
+           register: hadoop_install
+           when: hadoop_version.failed == true
+
+         - name: "uploading core file"
+           template:
+                src: "/ansible/TASK11/hadoop_files/data_core"
+                dest: "/etc/hadoop/core-site.xml"
+
+         - name: "running dfsadmin command"
+           command: "hadoop dfsadmin -report"
+           register: dfsadmin
+
+         - name: "stopping firewall"
+           service:
+                name: "firewalld"
+                state: stopped
+
+         - name: "copying file to client"
+           copy:
+                   src: "{{ file }}"
+                   dest: "/root"
+
+         - name: "uploading to the cluster"
+           command: "hadoop fs -put /root/{{ file }} /"
+
